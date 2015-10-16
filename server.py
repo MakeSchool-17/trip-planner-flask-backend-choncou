@@ -10,33 +10,62 @@ mongo = MongoClient('localhost', 27017)
 app.db = mongo.develop_database
 api = Api(app)
 
-#Implement REST Resource
-class MyObject(Resource):
+# Implement REST Resource
+
+
+class Trip(Resource):
 
     def post(self):
-      new_myobject = request.json
-      myobject_collection = app.db.myobjects
-      result = myobject_collection.insert_one(request.json)
+        new_trip = request.json
+        trip_collection = app.db.trip
+        result = trip_collection.insert_one(new_trip)
 
-      myobject = myobject_collection.find_one({"_id": ObjectId(result.inserted_id)})
+        trip = trip_collection.find_one({"_id": ObjectId(result.inserted_id)})
 
-      return myobject
+        return trip
 
-    def get(self, myobject_id):
-      myobject_collection = app.db.myobjects
-      myobject = myobject_collection.find_one({"_id": ObjectId(myobject_id)})
+    def get(self, trip_id):
+        trip_collection = app.db.trip
+        trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
 
-      if myobject is None:
-        response = jsonify(data=[])
-        response.status_code = 404
-        return response
-      else:
-        return myobject
+        if trip is None:
+            response = jsonify(data=[])
+            response.status_code = 404
+            return response
+        else:
+            return trip
 
-# Add REST resource to API
-api.add_resource(MyObject, '/myobject/','/myobject/<string:myobject_id>')
+api.add_resource(Trip, '/trips/', '/trips/<string:trip_id>')
+
+
+# class User(Resource):
+#
+#     def post(self):
+#         new_myobject = request.json
+#         myobject_collection = app.db.myobjects
+#         result = myobject_collection.insert_one(request.json)
+#
+#         myobject = myobject_collection.find_one({"_id": ObjectId(result.inserted_id)})
+#
+#         return myobject
+#
+#     def get(self, myobject_id):
+#         myobject_collection = app.db.myobjects
+#         myobject = myobject_collection.find_one({"_id": ObjectId(myobject_id)})
+#
+#         if myobject is None:
+#             response = jsonify(data=[])
+#             response.status_code = 404
+#             return response
+#         else:
+#             return myobject
+#
+# # Add REST resource to API
+# api.add_resource(User, '/users/', '/users/<string:users_id>')
 
 # provide a custom JSON serializer for flaks_restful
+
+
 @api.representation('application/json')
 def output_json(data, code, headers=None):
     resp = make_response(JSONEncoder().encode(data), code)
