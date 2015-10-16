@@ -3,8 +3,10 @@ import unittest
 import json
 from pymongo import MongoClient
 
-test_trip = dict(name="My Trip", start="Joburg", destination="Cape Town",
-waypoints=["Durban", "Richards Bay"])
+test_trip = dict(name="My Trip", start="Joburg", destination="Cape Town", waypoints=["Durban", "Richards Bay"])
+
+updated_trip = dict(name="My Trip", start="Pretoria", destination="Cape Town", waypoints=["Durban", "Richards Bay"])
+
 
 class FlaskrTestCase(unittest.TestCase):
 
@@ -24,9 +26,7 @@ class FlaskrTestCase(unittest.TestCase):
     # Trip tests
 
     def test_posting_trip(self):
-        response = self.app.post('/trips/',
-        data=json.dumps(test_trip),
-        content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
 
         responseJSON = json.loads(response.data.decode())
 
@@ -34,11 +34,19 @@ class FlaskrTestCase(unittest.TestCase):
         assert 'application/json' in response.content_type
         assert 'My Trip' in responseJSON["name"]
 
+    def test_putting_trip(self):  # Updating a trip
+        post_response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        postResponseJSON = json.loads(post_response.data.decode())
+        postedObjectID = postResponseJSON["_id"]
+
+        response = self.app.put('/trips/'+postedObjectID, data=json.dumps(updated_trip), content_type='application/json')
+        responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
+        assert "Pretoria" in responseJSON["start"]
+
     def test_getting_trip(self):
-        # import pdb; pdb.set_trace()
-        response = self.app.post('/trips/',
-        data=json.dumps(test_trip),
-        content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
 
         postResponseJSON = json.loads(response.data.decode())
         postedObjectID = postResponseJSON["_id"]
@@ -48,6 +56,8 @@ class FlaskrTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         assert 'My Trip' in responseJSON["name"]
+
+
 
     def test_getting_non_existent_trip(self):
         response = self.app.get('/trips/55f0cbb4236f44b7f0e3cb23')

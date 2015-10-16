@@ -24,6 +24,16 @@ class Trip(Resource):
 
         return trip
 
+    def put(self, trip_id):
+        # import pdb; pdb.set_trace()
+        changed_trip = request.json
+        trip_collection = app.db.trip
+        trip_collection.update_one({"_id": ObjectId(trip_id)}, {"$set": changed_trip})
+
+        trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+
+        return trip
+
     def get(self, trip_id):
         trip_collection = app.db.trip
         trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
