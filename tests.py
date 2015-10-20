@@ -2,10 +2,13 @@ import server
 import unittest
 import json
 from pymongo import MongoClient
+import base64
 
 test_trip = dict(name="My Trip", start="Joburg", destination="Cape Town", waypoints=["Durban", "Richards Bay"])
 
 updated_trip = dict(name="My Trip", start="Pretoria", destination="Cape Town", waypoints=["Durban", "Richards Bay"])
+
+test_user = dict(username="admin", password="secret")
 
 
 class FlaskrTestCase(unittest.TestCase):
@@ -57,11 +60,40 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
         assert 'My Trip' in responseJSON["name"]
 
+    def test_deleting_trip(self):
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
 
+        postResponseJSON = json.loads(response.data.decode())
+        postedObjectID = postResponseJSON["_id"]
+
+        response = self.app.delete('/trips/'+postedObjectID)
+
+        self.assertEqual(response.status_code, 200)
 
     def test_getting_non_existent_trip(self):
         response = self.app.get('/trips/55f0cbb4236f44b7f0e3cb23')
         self.assertEqual(response.status_code, 404)
+
+    # User tests
+    def test_posting_user(self):
+        response = self.app.post('/users/', data=json.dumps(test_user), content_type='application/json')
+
+        responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
+        assert 'application/json' in response.content_type
+        assert 'admin' in responseJSON["username"]
+
+    def test_validating_user(self):
+        response = self.app.post('/users/', data=json.dumps(test_user), content_type='application/json')
+
+        # postResponseJSON = json.loads(response.data.decode())
+        # postedObjectID = postResponseJSON["_id"]
+
+        response = self.app.get('/users/', data=json.dumps(test_user), content_type='application/json')
+        # responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
 
 if __name__ == '__main__':
     unittest.main()
