@@ -10,14 +10,10 @@ updated_trip = dict(name="My Trip", start="Pretoria", destination="Cape Town", w
 
 test_user = dict(username="admin", password="secret")
 
-def make_auth_header(username="ryankim", password="12341234"):
-    string = username + ":" + password
-    encoded_base64 = base64.b64encode(string.encode("utf-8"))
-    decoded_base64 = encoded_base64.decode("utf-8")
-    auth_header = "Authorization: Basic " + decoded_base64
-    return auth_header
-
-headers = {"content-type": "application/json", "Authentication": make_auth_header()}
+name_pass = "admin:secret"
+b64_str = base64.encodebytes(name_pass.encode("utf-8"))
+full_str = "Basic " + b64_str.decode("utf-8").strip('\n')
+rheaders = {"Authorization": full_str}
 
 
 class FlaskrTestCase(unittest.TestCase):
@@ -38,7 +34,7 @@ class FlaskrTestCase(unittest.TestCase):
     # Trip tests
 
     def test_posting_trip(self):
-        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json', headers=rheaders)
 
         responseJSON = json.loads(response.data.decode())
 
@@ -47,7 +43,7 @@ class FlaskrTestCase(unittest.TestCase):
         assert 'My Trip' in responseJSON["name"]
 
     def test_putting_trip(self):  # Updating a trip
-        post_response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        post_response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json', headers=rheaders)
         postResponseJSON = json.loads(post_response.data.decode())
         postedObjectID = postResponseJSON["_id"]
 
@@ -58,29 +54,29 @@ class FlaskrTestCase(unittest.TestCase):
         assert "Pretoria" in responseJSON["start"]
 
     def test_getting_trip(self):
-        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json', headers=rheaders)
 
         postResponseJSON = json.loads(response.data.decode())
         postedObjectID = postResponseJSON["_id"]
 
-        response = self.app.get('/trips/'+postedObjectID)
+        response = self.app.get('/trips/'+postedObjectID, headers=rheaders)
         responseJSON = json.loads(response.data.decode())
 
         self.assertEqual(response.status_code, 200)
         assert 'My Trip' in responseJSON["name"]
 
     def test_getting_user_trips(self):
-        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
-        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json', headers=rheaders)
+        response = self.app.post('/trips/', data=json.dumps(updated_trip), content_type='application/json', headers=rheaders)
 
-        response = self.app.get('/trips/')
+        response = self.app.get('/trips/', headers=rheaders)
         responseJSON = json.loads(response.data.decode())
 
         self.assertEqual(response.status_code, 200)
-        assert 'My Trip' in responseJSON[0]["name"]
+        assert 'My Trip' in responseJSON[1]["name"]
 
     def test_deleting_trip(self):
-        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json', headers=rheaders)
 
         postResponseJSON = json.loads(response.data.decode())
         postedObjectID = postResponseJSON["_id"]
@@ -90,7 +86,7 @@ class FlaskrTestCase(unittest.TestCase):
         self.assertEqual(response.status_code, 200)
 
     def test_getting_non_existent_trip(self):
-        response = self.app.get('/trips/55f0cbb4236f44b7f0e3cb23')
+        response = self.app.get('/trips/55f0cbb4236f44b7f0e3cb23', headers=rheaders)
         self.assertEqual(response.status_code, 404)
 
     # User tests
