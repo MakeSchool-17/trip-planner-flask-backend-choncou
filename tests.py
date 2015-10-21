@@ -10,6 +10,15 @@ updated_trip = dict(name="My Trip", start="Pretoria", destination="Cape Town", w
 
 test_user = dict(username="admin", password="secret")
 
+def make_auth_header(username="ryankim", password="12341234"):
+    string = username + ":" + password
+    encoded_base64 = base64.b64encode(string.encode("utf-8"))
+    decoded_base64 = encoded_base64.decode("utf-8")
+    auth_header = "Authorization: Basic " + decoded_base64
+    return auth_header
+
+headers = {"content-type": "application/json", "Authentication": make_auth_header()}
+
 
 class FlaskrTestCase(unittest.TestCase):
 
@@ -59,6 +68,16 @@ class FlaskrTestCase(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         assert 'My Trip' in responseJSON["name"]
+
+    def test_getting_user_trips(self):
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+        response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')
+
+        response = self.app.get('/trips/')
+        responseJSON = json.loads(response.data.decode())
+
+        self.assertEqual(response.status_code, 200)
+        assert 'My Trip' in responseJSON[0]["name"]
 
     def test_deleting_trip(self):
         response = self.app.post('/trips/', data=json.dumps(test_trip), content_type='application/json')

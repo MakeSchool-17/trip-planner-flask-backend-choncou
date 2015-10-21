@@ -51,7 +51,7 @@ class Trip(Resource):
     def post(self):
         new_trip = request.json
         trip_collection = app.db.trip
-        new_trip["user"] = "User ID"  # TODO: Real User_ID
+        new_trip["user"] = "User_ID"  # TODO: Real User_ID
         result = trip_collection.insert_one(new_trip)
 
         trip = trip_collection.find_one({"_id": ObjectId(result.inserted_id)})
@@ -68,9 +68,13 @@ class Trip(Resource):
         return trip
 
     @requires_auth
-    def get(self, trip_id):
+    def get(self, trip_id=None):
         trip_collection = app.db.trip
-        trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+        if trip_id:
+            trip = trip_collection.find_one({"_id": ObjectId(trip_id)})
+        else:
+            trip = trip_collection.find({"user": "User_ID"})
+            trip = list(trip)  # Return a list of the trips for a user
 
         if trip is None:
             response = jsonify(data=[])
